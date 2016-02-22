@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+!UIGenerator.UIGeneratorConfig
+projectName: "Color"
+projectNamespace: "DWColor"
+prefabWithPrefix: true
+...
+
+---
+!UIGenerator.UIDesciption
+Screens:
+  - !UIGenerator.Screen
+    Name: "ColorRoomIPSelection"
+    Panels:
+      - !UIGenerator.Panel {name: "ColorRoomList"}
+
+  - !UIGenerator.Screen
+    Name: "CharacterIntro"
+    Panels:
+      - !UIGenerator.Panel {name: "ColorRoomSelectionConfirm"}
+
+  - !UIGenerator.Screen
+    Name: "Drawing"
+    Panels: 
+    - !UIGenerator.Panel { name: "CharacterSelection" }
+    - !UIGenerator.Panel { name: "BackgroundSelection" }
+    - !UIGenerator.Panel { name: "ToolSelection" }
+    - !UIGenerator.Panel { name: "ColorSelection" }
+    - !UIGenerator.Panel { name: "PropSelection" }
+    - !UIGenerator.Panel { name: "FrameSelection" }
+    - !UIGenerator.Panel { name: "NameSelection" }
+
+  - !UIGenerator.Screen
+    Name: "BringToLife"
+    Panels:
+      - !UIGenerator.Panel { name: "BringToLifeUI" }
+
+  - !UIGenerator.Screen
+    Name: "SaveAndShare"
+    Panels:
+      - !UIGenerator.Panel { name: "SaveAndShareUI" }
+...
