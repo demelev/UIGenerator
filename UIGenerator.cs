@@ -16,6 +16,11 @@ using System.Yaml.Serialization;
 
 namespace UIGenerator
 {
+    public enum FileType
+    {
+        YAML
+    }
+
     public class UIGenerator
     {
 #region Private members
@@ -71,6 +76,7 @@ namespace UIGenerator
         {
             string dir = System.IO.Directory.GetCurrentDirectory();
             dir = Path.Combine(dir, templatesDir);
+            Debug.Log("Create filesystem from : " + dir);
 
             _fileSystem = new LocalFileSystem(dir);
             _context = new Context();
@@ -83,11 +89,22 @@ namespace UIGenerator
 
             _nameGenerator = new NameGenerator(_config);
         }
+        
+        public UIGeneratorConfig Config {
+            set {
+                if (_config != value)
+                {
+                    _config = value;
+                    _nameGenerator.config = value;
+                }
+            }
+        }
 
         public void GenerateUI( UIDesciption uiDescription )
         {
             GenerateScripts(uiDescription);
 
+            //TODO: enable this code
             /*
              *GameObject dummy = new GameObject("dummy_");
              *var cor = dummy.AddComponent(typeof(Coroutiner)) as Coroutiner;
@@ -100,14 +117,31 @@ namespace UIGenerator
         public void GenerateUIFromFile(string path)
         {
             string template = File.ReadAllText(path);
-            // Determine file type.
-            // var uiDesc = GenerateUIDescription(template, fileType);
-            // GenerateUI(uiDesc);
+            //TODO: Determine file type.
+            var uiDesc = GenerateUIDescription(template, FileType.YAML);
+            GenerateUI(uiDesc);
         }
 
 #endregion
 
 #region Generator private methods
+
+        private UIDesciption GenerateUIDescription(string data, FileType type)
+        {
+            UIDesciption descr = null;
+
+            switch(type)
+            {
+                case FileType.YAML: {
+                    YamlSerializer sr = new YamlSerializer();
+                    var docs = sr.Deserialize(data);
+                    Config = docs[0] as UIGeneratorConfig;
+                    descr = docs[1] as UIDesciption;
+                } break;
+            }
+
+            return descr;
+        }
 
         private void GenerateScripts(UIDesciption uiDesc)
         {
@@ -115,6 +149,8 @@ namespace UIGenerator
             foreach(var screen in uiDesc.Screens)
             {
                 string filename = screen.FileName;
+                Debug.Log("Create screen script: " + filename);
+                continue;
     
                 if (File.Exists(filename))
                     continue;
@@ -137,6 +173,8 @@ namespace UIGenerator
             {
                 string className = panel.ClassName;
                 string filename =  panel.FileName;
+                Debug.Log("Create panel script: " + filename);
+                continue;
 
                 var stream = File.CreateText(filename);
                 string result = panel_template.Render(Hash.FromAnonymousObject( new {panel = panel}));
@@ -211,96 +249,11 @@ namespace UIGenerator
 
     }
 
-    public class UIGeneratorConfig
-    {
-        public bool prefabWithPrefix;
-    }
 
     [Serializable]
     public class UIDesciption
     {
         public Screen[] Screens;
-    }
-
-    [Serializable]
-    public class Panel
-    {
-        public string name;
-
-        public string ClassName {
-            get {
-                return this.name + "Panel";
-            }
-        }
-
-        public string FileName {
-            get {
-                return string.Format("Assets/Bully.Color/Source/View/Panels/{0}.cs", ClassName);
-            }
-        }
-
-        public Type ComponentType {
-            get {
-                return Type.GetType("DWColor." + ClassName + ", Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
-            }
-        }
-    }
-
-    [Serializable]
-    public class Screen
-    {
-        public string Name;
-        public Panel[] Panels;
-
-        public string ClassName {
-            get {
-                return this.Name + "Screen";
-            }
-        }
-
-        public string FileName {
-            get {
-                //TODO: Make paths universal.
-                return string.Format("Assets/Bully.Color/Source/Screens/{0}.cs", ClassName);
-            }
-        }
-
-        public string PanelsGroupName {
-            get {
-                return Name + "Panels";
-            }
-        }
-
-        public Type ComponentType {
-            get {
-                //TODO: Make Namespace universal.
-                return Type.GetType("DWColor." + ClassName + ", Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
-            }
-        }
-
-
-        static public string MakeFieldName(string name)
-        {
-            return Char.ToLower(name[0]) + name.Substring(1);
-        }
-
-        public string GetPanelsDeclaration()
-        {
-            string text = "";
-
-            foreach (var panel in Panels)
-            {
-                Type panel_type = panel.ComponentType;
-
-                string field_name_downcase = MakeFieldName(panel_type.Name);
-                string field_decl = string.Format("\t[SerializeField]\n\t{0} _{1};\n\n",
-                        panel.ClassName, field_name_downcase);
-
-                text += field_decl;
-            }
-
-            return text;
-        }
     }
 
     public class ColorSupportClass 
@@ -310,53 +263,9 @@ namespace UIGenerator
         [MenuItem("Tools/Generators/PanelsGenerator")]
         static void OpenPanelsGenerator()
         {
-            Screen[] screens = new Screen[]
-            {
-                new Screen { Name = "ColorRoomIPSelection",  Panels = new Panel[] {
-                    new Panel { name = "ColorRoomList" }
-                }},
-
-                new Screen { Name = "CharacterIntro", Panels = new Panel[] {
-                    new Panel { name = "ColorRoomSelectionConfirm" }
-                }},
-
-                new Screen { Name = "Drawing", Panels = new Panel[] {
-                    new Panel { name = "CharacterSelection" },
-                    new Panel { name = "BackgroundSelection" },
-                    new Panel { name = "ToolSelection" },
-                    new Panel { name = "ColorSelection" },
-                    new Panel { name = "PropSelection" },
-                    new Panel { name = "FrameSelection" },
-                    new Panel { name = "NameSelection" }
-                }},
-
-                new Screen { Name = "BringToLife", Panels = new Panel[] {
-                    new Panel { name = "BringToLifeUI" }
-                }},
-
-                new Screen { Name = "SaveAndShare", Panels = new Panel[] {
-                    new Panel { name = "SaveAndShareUI" }
-                }},
-            };
-
-            UIDesciption uiDescription = new UIDesciption();
-            uiDescription.Screens = screens;
-
-            UIGenerator generator = new UIGenerator("Assets/Bully.Core/Dependencies/UIGenerator/Templates");
-            generator.GenerateUI(uiDescription);
+            UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+            generator.GenerateUIFromFile("Assets\\ui_description.yaml");
         }
-
-        [MenuItem("Tools/Generators/Check Yaml parser")]
-        static void CheckYamlParser()
-        {
-            var serializer = new YamlSerializer();
-            string yaml = serializer.Serialize(p);
-            Point restored = serializer.Deserialize(yaml)[0] as Point;
-            Debug.Log("Yaml : " + yaml);
-            Debug.Log("Restores : " + restored);
-        }
-
-
 #endregion
     }
 }
