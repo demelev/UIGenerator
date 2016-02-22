@@ -1,0 +1,51 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using System;
+
+namespace DWColor
+{
+    public class {{screen.ClassName}} : BaseScreen
+    {
+    #region Public serialized variables
+
+    #endregion
+
+
+    #region Private variables
+    {{screen.GetPanelsDeclaration()}}
+    #endregion
+
+
+    #region Public methods and properties
+
+    #endregion
+
+        public override void OnScreenEnter()
+        {
+            base.OnScreenEnter();
+        }
+
+        public override void OnScreenExit()
+        {
+            base.OnScreenExit();
+        }
+
+#region {{screen.Classname}} methods
+
+#endregion
+
+#region Monobehavior methods
+        void OnEnable()
+        {
+            //_panel.FamilyNameSelected += OnFamilySelected_handler;
+        }
+
+        void OnDisable()
+        {
+            //_panel.FamilyNameSelected -= OnFamilySelected_handler;
+        }
+#endregion
+
+    }
+}
