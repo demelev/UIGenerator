@@ -32,7 +32,7 @@ namespace UIGenerator
         private string _lastTemplateKey;
         private Template _lastTemplate;
 
-        private UIGeneratorConfig _config;
+        static internal UIGeneratorConfig s_config;
         private NameGenerator _nameGenerator;
 #endregion
 
@@ -83,18 +83,18 @@ namespace UIGenerator
             Template.FileSystem = _fileSystem;
             CheckFileSystem();
 
-            _config = new UIGeneratorConfig() {
-                prefabWithPrefix = true
+            s_config = new UIGeneratorConfig() {
+                PrefabWithPrefix = true
             };
 
-            _nameGenerator = new NameGenerator(_config);
+            _nameGenerator = new NameGenerator(s_config);
         }
         
         public UIGeneratorConfig Config {
             set {
-                if (_config != value)
+                if (s_config != value)
                 {
-                    _config = value;
+                    s_config = value;
                     _nameGenerator.config = value;
                 }
             }
@@ -116,7 +116,7 @@ namespace UIGenerator
 
         public void GenerateUIFromFile(string path)
         {
-            string template = File.ReadAllText(path);
+            string template = File.ReadAllText(path).Replace("!UI", "!UIGenerator");
             //TODO: Determine file type.
             var uiDesc = GenerateUIDescription(template, FileType.YAML);
             GenerateUI(uiDesc);
@@ -149,14 +149,20 @@ namespace UIGenerator
             foreach(var screen in uiDesc.Screens)
             {
                 string filename = screen.FileName;
-                Debug.Log("Create screen script: " + filename);
-                continue;
+                /*
+                 *Debug.Log("Create screen script: " + filename);
+                 *continue;
+                 */
     
                 if (File.Exists(filename))
                     continue;
     
                 var stream = File.CreateText(filename);
-                string result = screen_template.Render(Hash.FromAnonymousObject( new  {screen = screen}));
+
+                string result = screen_template.Render(
+                    Hash.FromAnonymousObject( new  {screen = screen, config = s_config})
+                );
+
                 stream.Write(result);
                 stream.Close();
     
@@ -168,16 +174,21 @@ namespace UIGenerator
 
         private void GeneratePanelsScripts(Screen screen)
         {
-            Template panel_template = GetTemplate("panel");
+            Template panel_template = GetTemplate("'panel'");
             foreach (var panel in screen.Panels)
             {
                 string className = panel.ClassName;
                 string filename =  panel.FileName;
-                Debug.Log("Create panel script: " + filename);
-                continue;
+                /*
+                 *Debug.Log("Create panel script: " + filename);
+                 *continue;
+                 */
 
                 var stream = File.CreateText(filename);
-                string result = panel_template.Render(Hash.FromAnonymousObject( new {panel = panel}));
+                string result = panel_template.Render(
+                    Hash.FromAnonymousObject( new {panel = panel, config = s_config})
+                );
+
                 stream.Write(result);
                 stream.Close();
                 AssetDatabase.ImportAsset(filename);
@@ -239,7 +250,7 @@ namespace UIGenerator
 
         public string PrefabName(string name)
         {
-            if (config.prefabWithPrefix)
+            if (config.PrefabWithPrefix)
             {
                 return "P_" + name;
             }

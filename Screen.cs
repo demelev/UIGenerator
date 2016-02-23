@@ -1,9 +1,11 @@
+using UnityEngine;
 using System;
+using DotLiquid;
 
 namespace UIGenerator
 {
   [Serializable]
-  public class Screen
+  public class Screen : ILiquidizable
   {
     public string Name;
     public Panel[] Panels;
@@ -17,7 +19,8 @@ namespace UIGenerator
     public string FileName {
       get {
         //TODO: Make paths universal.
-        return string.Format("Assets/Bully.Color/Source/Screens/{0}.cs", ClassName);
+        return string.Format("Assets/Bully.{0}/Source/Screens/{1}.cs",
+            UIGenerator.s_config.ProjectName, ClassName);
       }
     }
 
@@ -30,7 +33,10 @@ namespace UIGenerator
     public Type ComponentType {
       get {
         //TODO: Make Namespace universal.
-        return Type.GetType("DWColor." + ClassName + ", Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+        string temp = "{0}.{1}, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+        string typename = string.Format(temp, UIGenerator.s_config.ProjectNamespace,
+                                              ClassName);
+        return Type.GetType(typename);
       }
     }
 
@@ -40,22 +46,31 @@ namespace UIGenerator
       return Char.ToLower(name[0]) + name.Substring(1);
     }
 
-    public string GetPanelsDeclaration()
+    public string[] GetPanelsDeclaration()
     {
       string text = "";
+      string[] fields = new string[Panels.Length];
+      int index = 0;
 
       foreach (var panel in Panels)
       {
-        Type panel_type = panel.ComponentType;
-
-        string field_name_downcase = MakeFieldName(panel_type.Name);
-        string field_decl = string.Format("\t[SerializeField]\n\t{0} _{1};\n\n",
+        string field_name_downcase = MakeFieldName(panel.ClassName);
+        string field_decl = string.Format("{0} _{1};",
             panel.ClassName, field_name_downcase);
 
-        text += field_decl;
+        fields[index++] = field_decl;
       }
 
-      return text;
+      return fields;
+    }
+
+    public object ToLiquid()
+    {
+        return new {
+            Name = Name,
+            ClassName = ClassName,
+            PanelsDeclaration = GetPanelsDeclaration()
+        };
     }
   }
 }

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-namespace DWColor
+namespace {{config.ProjectNamespace}}
 {
     public class {{screen.ClassName}} : BaseScreen
     {
@@ -13,7 +13,11 @@ namespace DWColor
 
 
     #region Private variables
-    {{screen.GetPanelsDeclaration()}}
+    {% for panel_field in screen.PanelsDeclaration %}
+    [SerializeField]
+    private {{panel_field}}
+
+    {% endfor %}
     #endregion
 
 

@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
-namespace DWColor
+namespace {{config.ProjectNamespace}}
 {
     public class {{panel.ClassName}} : PanelBase
     {
     #region Public events
-
+        {% for event in panel.PublicEvents %}
+            {{event.ToString()}}
+        {% endfor %}
     #endregion
 
 
@@ -23,7 +25,7 @@ namespace DWColor
 
 
 #region {{panel.ClassName}} methods
-
+        {{panel.ElementsHandlers}}
 #endregion
 
 #region Monobehavior methods
@@ -35,6 +37,5 @@ namespace DWColor
         {
         }
 #endregion
-
     }
 }
