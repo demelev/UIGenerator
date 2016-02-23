@@ -63,7 +63,7 @@ namespace UIGenerator
 
         public string FileName {
             get {
-                return string.Format("Assets/Bully.{0}/Source/View/Panels/{1}.cs",
+                return string.Format("Assets/Bully.UI/Source/Panels/{1}.cs",
                     UIGenerator.s_config.ProjectName, ClassName);
             }
         }

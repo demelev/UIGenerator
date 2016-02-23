@@ -1,42 +1,55 @@
 %YAML 1.2
 ---
-!UIGenerator.UIGeneratorConfig
-projectName: "Color"
-projectNamespace: "DWColor"
-prefabWithPrefix: true
+!UI.UIGeneratorConfig
+ProjectName: "Color"
+ProjectNamespace: "DWColor"
+PrefabWithPrefix: true
 ...
 
 ---
-!UIGenerator.UIDesciption
+!UI.UIDesciption
 Screens:
-  - !UIGenerator.Screen
+  - !UI.Screen
+    Name: "MainMenu"
+    Panels:
+      - !UI.Panel {name: "ColorRoom_QuickDraw"}
+      - !UI.Panel {name: "ColorPages_Capture"}
+
+  - !UI.Screen
     Name: "ColorRoomIPSelection"
     Panels:
-      - !UIGenerator.Panel {name: "ColorRoomList"}
+      - !UI.Panel
+        name: "ColorRoomList"
+        elements:
+          - !UI.List { horizontal: true, list_item_name: "ColorRoomPage" } 
 
-  - !UIGenerator.Screen
+
+  - !UI.Screen
     Name: "CharacterIntro"
     Panels:
-      - !UIGenerator.Panel {name: "ColorRoomSelectionConfirm"}
+      - !UI.Panel {name: "ColorRoomSelectionConfirm"}
 
-  - !UIGenerator.Screen
+  - !UI.Screen
     Name: "Drawing"
     Panels: 
-    - !UIGenerator.Panel { name: "CharacterSelection" }
-    - !UIGenerator.Panel { name: "BackgroundSelection" }
-    - !UIGenerator.Panel { name: "ToolSelection" }
-    - !UIGenerator.Panel { name: "ColorSelection" }
-    - !UIGenerator.Panel { name: "PropSelection" }
-    - !UIGenerator.Panel { name: "FrameSelection" }
-    - !UIGenerator.Panel { name: "NameSelection" }
+      - !UI.Panel { name: "CharacterSelection" }
+      - !UI.Panel { name: "BackgroundSelection" }
+      - !UI.Panel { name: "ToolSelection" }
+      - !UI.Panel { name: "ColorSelection" }
+      - !UI.Panel { name: "PropSelection" }
+      - !UI.Panel { name: "FrameSelection" }
+      - !UI.Panel { name: "NameSelection" }
 
-  - !UIGenerator.Screen
+  - !UI.Screen
     Name: "BringToLife"
     Panels:
-      - !UIGenerator.Panel { name: "BringToLifeUI" }
+      - !UI.Panel { name: "BringToLifeUI" }
 
-  - !UIGenerator.Screen
+  - !UI.Screen
     Name: "SaveAndShare"
     Panels:
-      - !UIGenerator.Panel { name: "SaveAndShareUI" }
+      - !UI.Panel { name: "SaveAndShareUI" }
+
+SharedPanels: []
+
 ...

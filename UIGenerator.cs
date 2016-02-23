@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEditor.Callbacks;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,6 +24,19 @@ namespace UIGenerator
 
     public class UIGenerator
     {
+        static public bool ScriptsWasCreated
+        {
+            get {
+                return EditorPrefs.GetBool("ScriptsWasCreated", false);
+            }
+
+            set {
+                EditorPrefs.SetBool("ScriptsWasCreated", value);
+            }
+        }
+
+        static public UIDesciption ActiveDescription;
+
 #region Private members
         private IFileSystem _fileSystem;
         private Context _context;
@@ -43,8 +57,9 @@ namespace UIGenerator
 
         private void CheckFileSystem()
         {
-            Directory.CreateDirectory("Assets/Bully.Color/Source/View/Panels");
-            Directory.CreateDirectory("Assets/Bully.Color/Source/Screens");
+            Directory.CreateDirectory("Assets/Bully.UI/Source/Panels");
+            Directory.CreateDirectory(string.Format("Assets/Bully.{0}/Source/Screens", s_config.ProjectName));
+            Directory.CreateDirectory("Assets/Bully.UI/Prefabs/Panels");
         }
 
         protected Template GetTemplate(string name)
@@ -81,7 +96,6 @@ namespace UIGenerator
             _fileSystem = new LocalFileSystem(dir);
             _context = new Context();
             Template.FileSystem = _fileSystem;
-            CheckFileSystem();
 
             s_config = new UIGeneratorConfig() {
                 PrefabWithPrefix = true
@@ -100,20 +114,6 @@ namespace UIGenerator
             }
         }
 
-        public void GenerateUI( UIDesciption uiDescription )
-        {
-            GenerateScripts(uiDescription);
-
-            //TODO: enable this code
-            /*
-             *GameObject dummy = new GameObject("dummy_");
-             *var cor = dummy.AddComponent(typeof(Coroutiner)) as Coroutiner;
-             *cor.DoAfterCompilation(() => {
-             *    CreateUnityObjects(uiDescription);
-             *});
-             */
-        }
-
         public void GenerateUIFromFile(string path)
         {
             string template = File.ReadAllText(path).Replace("!UI", "!UIGenerator");
@@ -122,9 +122,23 @@ namespace UIGenerator
             GenerateUI(uiDesc);
         }
 
+        public void GenerateUI( UIDesciption uiDesc )
+        {
+            if (!UIGenerator.ScriptsWasCreated)
+            {
+                CheckFileSystem();
+                GenerateScripts(uiDesc);
+            }
+            else
+            {
+                CreateUnityObjects(uiDesc);
+            }
+        }
+
 #endregion
 
 #region Generator private methods
+
 
         private UIDesciption GenerateUIDescription(string data, FileType type)
         {
@@ -145,6 +159,8 @@ namespace UIGenerator
 
         private void GenerateScripts(UIDesciption uiDesc)
         {
+            CheckFileSystem();
+
             Template screen_template = GetTemplate("'screen'");
             foreach(var screen in uiDesc.Screens)
             {
@@ -166,10 +182,11 @@ namespace UIGenerator
                 stream.Write(result);
                 stream.Close();
     
-                AssetDatabase.ImportAsset(filename);
-    
                 GeneratePanelsScripts(screen);
+                AssetDatabase.ImportAsset(filename);
             }
+
+            UIGenerator.ScriptsWasCreated = true;
         }
 
         private void GeneratePanelsScripts(Screen screen)
@@ -265,17 +282,35 @@ namespace UIGenerator
     public class UIDesciption
     {
         public Screen[] Screens;
+        public Panel[] SharedPanels;
     }
 
     public class ColorSupportClass 
     {
 #region Panels Generator
 
-        [MenuItem("Tools/Generators/PanelsGenerator")]
-        static void OpenPanelsGenerator()
+        [MenuItem("Tools/Generators/Generate UI scripts")]
+        static void GenerateUIScripts()
         {
-            UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
-            generator.GenerateUIFromFile("Assets\\ui_description.yaml");
+            UIGenerator.ScriptsWasCreated = false;
+            //UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+            UIGenerator generator = new UIGenerator("Assets/Bully.Core/Dependencies/UIGenerator/Templates");
+            generator.GenerateUIFromFile("Assets/ui_description.yaml");
+        }
+
+        //[MenuItem("Tools/Generators/Generate Unity Objects")]
+        [DidReloadScripts]
+        static void GenerateUnityObjects()
+        {
+            Debug.Log("After scripts are loaded");
+            // Check this flag in order to don't execute this method
+            if (UIGenerator.ScriptsWasCreated)
+            {
+                //UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+                UIGenerator generator = new UIGenerator("Assets/Bully.Core/Dependencies/UIGenerator/Templates");
+                generator.GenerateUIFromFile("Assets/ui_description.yaml");
+                UIGenerator.ScriptsWasCreated = false;
+            }
         }
 #endregion
     }
