@@ -13,11 +13,12 @@ namespace {{config.ProjectNamespace}}
 
 
     #region Private variables
-    {% for panel_field in screen.PanelsDeclaration %}
-    [SerializeField]
-    private {{panel_field}}
-
-    {% endfor %}
+    {% comment %}
+                }{% for panel_field in screen.PanelsDeclaration %}
+                }[SerializeField]
+                }private {{panel_field}}
+                }{% endfor %}
+                {% endcomment %}
     #endregion
 
 

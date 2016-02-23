@@ -57,8 +57,9 @@ namespace UIGenerator
 
         private void CheckFileSystem()
         {
-            Directory.CreateDirectory("Assets/Bully.UI/Source/Panels");
             Directory.CreateDirectory(string.Format("Assets/Bully.{0}/Source/Screens", s_config.ProjectName));
+            Directory.CreateDirectory(string.Format("Assets/Bully.{0}/Prefabs/Screens", s_config.ProjectName));
+            Directory.CreateDirectory("Assets/Bully.UI/Source/Panels");
             Directory.CreateDirectory("Assets/Bully.UI/Prefabs/Panels");
         }
 
@@ -91,7 +92,6 @@ namespace UIGenerator
         {
             string dir = System.IO.Directory.GetCurrentDirectory();
             dir = Path.Combine(dir, templatesDir);
-            Debug.Log("Create filesystem from : " + dir);
 
             _fileSystem = new LocalFileSystem(dir);
             _context = new Context();
@@ -215,11 +215,13 @@ namespace UIGenerator
         private void CreateUnityObjects(UIDesciption uiDesc)
         {
             GameObject Screens = new GameObject("Screens");
+            ScreenManager smanager = Screens.AddComponent(typeof(ScreenManager)) as ScreenManager;
             GameObject Panels = new GameObject("Panels");
+            Panels.tag = "Panels";
 
             foreach (var screen in uiDesc.Screens)
             {
-                GameObject sc = new GameObject(screen.ClassName);
+                GameObject sc = new GameObject(_nameGenerator.PrefabName(screen.ClassName));
 
                 GameObject screen_panels_group = new GameObject(screen.PanelsGroupName);
                 PanelsGroup panels_group_comp = screen_panels_group.AddComponent(typeof(PanelsGroup)) as PanelsGroup;
@@ -243,6 +245,7 @@ namespace UIGenerator
                     string field_name = "_" + Screen.MakeFieldName(panel_type.Name);
                     var fields = screen_type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
                     //var field = screen_type.GetField(field_name, BindingFlags.NonPublic | BindingFlags.Instance);
+                    //
                     foreach(var f in fields)
                     {
                         if(f.Name == field_name)
@@ -251,6 +254,9 @@ namespace UIGenerator
 
                     PrefabUtility.CreatePrefab("Assets/Bully.UI/Prefabs/Panels/" + pobj.name + ".prefab", pobj, ReplacePrefabOptions.ConnectToPrefab);
                 }
+
+                string prefabName = string.Format("Assets/Bully.{0}/Prefabs/Screens/{1}.prefab", s_config.ProjectName, sc.name);
+                PrefabUtility.CreatePrefab(prefabName, sc, ReplacePrefabOptions.ConnectToPrefab);
             }
         }
 #endregion
@@ -294,7 +300,11 @@ namespace UIGenerator
         {
             UIGenerator.ScriptsWasCreated = false;
             //UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+#if UNITY_EDITOR_WIN
+            UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+#else
             UIGenerator generator = new UIGenerator("Assets/Bully.Core/Dependencies/UIGenerator/Templates");
+#endif
             generator.GenerateUIFromFile("Assets/ui_description.yaml");
         }
 
@@ -302,12 +312,14 @@ namespace UIGenerator
         [DidReloadScripts]
         static void GenerateUnityObjects()
         {
-            Debug.Log("After scripts are loaded");
             // Check this flag in order to don't execute this method
             if (UIGenerator.ScriptsWasCreated)
             {
-                //UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+#if UNITY_EDITOR_WIN
+                UIGenerator generator = new UIGenerator("Assets\\Bully.Core\\Dependencies\\UIGenerator\\Templates");
+#else
                 UIGenerator generator = new UIGenerator("Assets/Bully.Core/Dependencies/UIGenerator/Templates");
+#endif
                 generator.GenerateUIFromFile("Assets/ui_description.yaml");
                 UIGenerator.ScriptsWasCreated = false;
             }
