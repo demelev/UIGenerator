@@ -1,11 +1,12 @@
 using System;
+using DotLiquid;
 
 namespace UIGenerator
 {
     [Serializable]
-    public class Element
+    public class Element: ILiquidizable
     {
-        public string Name;
+        public string name;
         virtual public bool EmitsEvent {
             get {
                 return false;
@@ -14,6 +15,13 @@ namespace UIGenerator
 
         public virtual void Visit(PanelBase panel) 
         {
+        }
+
+        public virtual object ToLiquid()
+        {
+            return new {
+                name = name
+            };
         }
     }
 
@@ -28,6 +36,16 @@ namespace UIGenerator
                 return emits != null;
             }
         }
+
+        override public object ToLiquid()
+        {
+            return Hash.FromAnonymousObject(new {
+                type = "Button",
+                name = name,
+                text = text
+            });
+        }
+
     }
 
     [Serializable]
@@ -41,5 +59,13 @@ namespace UIGenerator
     {
         public bool horizontal;
         public string list_item_name;
+
+        override public object ToLiquid()
+        {
+            return new {
+                type = "List",
+                name = name
+            };
+        }
     }
 }

@@ -176,7 +176,11 @@ namespace UIGenerator
                 var stream = File.CreateText(filename);
 
                 string result = screen_template.Render(
-                    Hash.FromAnonymousObject( new  {screen = screen, config = s_config})
+                    Hash.FromAnonymousObject( new  {
+                        screen = screen,
+                        config = s_config,
+                        namer = _nameGenerator
+                    })
                 );
 
                 stream.Write(result);
@@ -203,7 +207,11 @@ namespace UIGenerator
 
                 var stream = File.CreateText(filename);
                 string result = panel_template.Render(
-                    Hash.FromAnonymousObject( new {panel = panel, config = s_config})
+                    Hash.FromAnonymousObject( new {
+                        panel = panel,
+                        config = s_config,
+                        namer = _nameGenerator
+                    })
                 );
 
                 stream.Write(result);
@@ -212,12 +220,43 @@ namespace UIGenerator
             }
         }
 
+        class MainSceneStructure
+        {
+            public ScreenManager ScreenManager;
+            public GameObject Canvas;
+            public GameObject Panels;
+            public GameObject Backgrounds;
+            public GameObject Managers;
+
+            public MainSceneStructure()
+            {
+                ScreenManager = GameObject.FindObjectOfType<ScreenManager>();
+                if (ScreenManager == null)
+                {
+                    var go = new GameObject("ScreenManager");
+                    ScreenManager = go.AddComponent(typeof(ScreenManager)) as ScreenManager;
+                }
+
+                Canvas = GameObject.FindWithTag("Canvas");
+                if (Canvas == null)
+                {
+                    Canvas = new GameObject("Canvas");
+                    Canvas.tag = "Canvas";
+                }
+
+                Panels = GameObject.FindWithTag("Panels");
+                if (Panels == null)
+                {
+                    Panels = new GameObject("Panels");
+                    Panels.transform.SetParent(Canvas.transform);
+                    Panels.tag = "Panels";
+                }
+            }
+        }
+
         private void CreateUnityObjects(UIDesciption uiDesc)
         {
-            GameObject Screens = new GameObject("Screens");
-            ScreenManager smanager = Screens.AddComponent(typeof(ScreenManager)) as ScreenManager;
-            GameObject Panels = new GameObject("Panels");
-            Panels.tag = "Panels";
+            var mainSceneStructure = new MainSceneStructure();
 
             foreach (var screen in uiDesc.Screens)
             {
@@ -225,15 +264,18 @@ namespace UIGenerator
 
                 GameObject screen_panels_group = new GameObject(screen.PanelsGroupName);
                 PanelsGroup panels_group_comp = screen_panels_group.AddComponent(typeof(PanelsGroup)) as PanelsGroup;
-                screen_panels_group.transform.SetParent(Panels.transform);
+                screen_panels_group.transform.SetParent(mainSceneStructure.Panels.transform);
 
                 Type screen_type = screen.ComponentType;
 
                 var screen_comp = sc.AddComponent(screen_type);
-                sc.transform.SetParent(Screens.transform);
+                sc.transform.SetParent(mainSceneStructure.ScreenManager.transform);
 
-                var panels_field = typeof(BaseScreen).GetField("Panels");
-                panels_field.SetValue(screen_comp, panels_group_comp);
+
+                /*// Commented because BaseScreen finds PanelsGroup on Awake.
+                 *var panels_field = typeof(BaseScreen).GetField("Panels");
+                 *panels_field.SetValue(screen_comp, panels_group_comp);
+                 */
 
                 foreach (var panel in screen.Panels)
                 {
@@ -242,15 +284,19 @@ namespace UIGenerator
                     var panel_comp = pobj.AddComponent(panel_type);
                     pobj.transform.SetParent(screen_panels_group.transform);
 
-                    string field_name = "_" + Screen.MakeFieldName(panel_type.Name);
-                    var fields = screen_type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+                    /*
+                     *string field_name = "_" + Screen.MakeFieldName(panel_type.Name);
+                     *var fields = screen_type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+                     */
                     //var field = screen_type.GetField(field_name, BindingFlags.NonPublic | BindingFlags.Instance);
                     //
-                    foreach(var f in fields)
-                    {
-                        if(f.Name == field_name)
-                            f.SetValue(screen_comp, panel_comp);
-                    }
+                    /*
+                     *foreach(var f in fields)
+                     *{
+                     *    if(f.Name == field_name)
+                     *        f.SetValue(screen_comp, panel_comp);
+                     *}
+                     */
 
                     PrefabUtility.CreatePrefab("Assets/Bully.UI/Prefabs/Panels/" + pobj.name + ".prefab", pobj, ReplacePrefabOptions.ConnectToPrefab);
                 }
@@ -271,6 +317,11 @@ namespace UIGenerator
             this.config = config;
         }
 
+        public string PrivateField(string name)
+        {
+            return "_" + Char.ToUpper(name[0]) + name.Substring(1);
+        }
+
         public string PrefabName(string name)
         {
             if (config.PrefabWithPrefix)
@@ -280,7 +331,6 @@ namespace UIGenerator
             else
                 return name;
         }
-
     }
 
 

@@ -80,9 +80,11 @@ namespace UIGenerator
 
         public object ToLiquid()
         {
+            //Debug.Log("ToLiquid -> elements : " + ClassName + " ; " + elements.Length);
             return new {
                 ClassName = ClassName,
-                PublicEvents = ""
+                PublicEvents = "",
+                elements = elements
             };
         }
     }
