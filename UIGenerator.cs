@@ -17,6 +17,21 @@ using System.Yaml.Serialization;
 
 namespace UIGenerator
 {
+    public static class NamesFilter
+    {
+        public static string PrivateMember(string input, string type)
+        {
+            char first = char.ToLower(input[0]);
+            return string.Format("_{0}{1}{2}", first, input.Substring(1), type);
+        }
+
+        public static string ButtonHandler(string input)
+        {
+            char first = char.ToUpper(input[0]);
+            return string.Format("{0}{1}ButtonClicked", first, input.Substring(1));
+        }
+    }
+
     public enum FileType
     {
         YAML
@@ -96,6 +111,7 @@ namespace UIGenerator
             _fileSystem = new LocalFileSystem(dir);
             _context = new Context();
             Template.FileSystem = _fileSystem;
+            Template.RegisterFilter(typeof(NamesFilter));
 
             s_config = new UIGeneratorConfig() {
                 PrefabWithPrefix = true

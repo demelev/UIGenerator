@@ -5,7 +5,8 @@ using DotLiquid;
 namespace UIGenerator
 {
   [Serializable]
-  public class Screen : ILiquidizable
+  [LiquidType("Name", "Panles", "ClassName", "GetPanelsDeclaration")]
+  public class Screen
   {
     public string Name;
     public Panel[] Panels;
@@ -64,13 +65,15 @@ namespace UIGenerator
       return fields;
     }
 
-    public object ToLiquid()
-    {
-        return new {
-            Name = Name,
-            ClassName = ClassName,
-            PanelsDeclaration = GetPanelsDeclaration()
-        };
-    }
+    /*
+     *public object ToLiquid()
+     *{
+     *    return new {
+     *        Name = Name,
+     *        ClassName = ClassName,
+     *        PanelsDeclaration = GetPanelsDeclaration()
+     *    };
+     *}
+     */
   }
 }

@@ -6,22 +6,27 @@ using System;
 
 namespace {{config.ProjectNamespace}}
 {
-    public class {{panel.ClassName}} : PanelBase
+    public class {{panel.class_name}} : PanelBase
     {
     #region Public events
-        {% for event in panel.PublicEvents %}
-            {{event.ToString()}}
-        {% endfor %}
+        {% comment %}
+                    }{% for event in panel.PublicEvents %}
+                    }    {{event.ToString()}}
+                    }{% endfor %}
+                    {% endcomment %}
     #endregion
 
 
     #region Private serializable variables
-        {% for element in panel.elements %}
-            {% if element.type == "Button" %}
+
+        {% if panel.buttons -%}
+        {% for element in panel.buttons -%}
+
         [SerializeField]
-        Button _{{ element.name }}Button;
-            {%endif%}
-        {% endfor %}
+        Button {{ element | private_member: "Button" }};
+        {% endfor -%}
+        {%endif-%}
+
     #endregion
 
 
@@ -30,15 +35,15 @@ namespace {{config.ProjectNamespace}}
     #endregion
 
 
-#region {{panel.ClassName}} methods
+#region {{panel.class_name}} methods
 
-        {% for element in panel.elements -%}
-        {% if element.type == "Button" %}
-        void {{ element.name | capitalize }}ButtonClicked()
+        {% if panel.buttons -%}
+            {% for element in panel.buttons -%}
+        void {{ element | button_handler }}()
         {
         }
-        {%endif%}
-        {% endfor -%}
+            {% endfor -%}
+        {%endif-%}
 
 #endregion
 
@@ -46,11 +51,13 @@ namespace {{config.ProjectNamespace}}
 
         void Awake()
         {
-            {% for element in panel.elements -%}
-            {% if element.type == "Button" %}
-            _{{ element.name}}Button.onClick.AddListener({{ element.name | capitalize }}ButtonClicked);
-            {%endif%}
-            {% endfor -%}
+
+        {% if panel.buttons -%}
+        {% for element in panel.buttons -%}
+        {{ element | private_member: "Button" }}.onClick.AddListener({{ element | button_handler }});
+        {% endfor -%}
+        {%endif-%}
+
         }
 
         void OnEnable()

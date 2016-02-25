@@ -19,10 +19,11 @@ namespace UIGenerator
     }
 
     [Serializable]
-    public class Panel : ILiquidizable
+    [LiquidType("name", "Buttons", "ClassName", "PublicEvents")]
+    public class Panel
     {
         public string name;
-        public Element[] elements;
+        public Element[] Elements;
 
         public string ClassName {
             get {
@@ -35,9 +36,9 @@ namespace UIGenerator
             get {
                 List<Event> events = new List<Event>();
 
-                for(int i = 0; i < elements.Length; i++)
+                for(int i = 0; i < Elements.Length; i++)
                 {
-                  Element el = elements[i];
+                  Element el = Elements[i];
                   if (el.EmitsEvent)
                   {
 /*
@@ -55,9 +56,23 @@ namespace UIGenerator
             }
         }
 
-        public string ElementsHandlers {
+        public string[] Buttons {
             get {
-                return "// There is no elements handlers.";
+                List<string> list = new List<string>();
+                foreach(var element in Elements)
+                {
+                    Button button = element as Button;
+                    if (button == null)
+                        continue;
+
+                    list.Add(button.name);
+                }
+
+                var arr = list.ToArray();
+                if (arr == null)
+                    return new string[0];
+
+                return arr;
             }
         }
 
@@ -78,14 +93,16 @@ namespace UIGenerator
             }
         }
 
-        public object ToLiquid()
-        {
-            //Debug.Log("ToLiquid -> elements : " + ClassName + " ; " + elements.Length);
-            return new {
-                ClassName = ClassName,
-                PublicEvents = "",
-                elements = elements
-            };
-        }
+        /*
+         *public object ToLiquid()
+         *{
+         *    //Debug.Log("ToLiquid -> elements : " + ClassName + " ; " + elements.Length);
+         *    return new {
+         *        ClassName = ClassName,
+         *        PublicEvents = "",
+         *        elements = elements
+         *    };
+         *}
+         */
     }
 }
