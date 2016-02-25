@@ -20,11 +20,12 @@ Screens:
     Panels:
       - !UI.Panel
         name: "ColorRoomList"
-        elements:
-          - !UI.List { horizontal: true, list_item_name: "ColorRoomPage" } 
 
       - !UI.Panel
         name: "ColorRoomConfirm"
+        events:
+          - !UI.Event { name: "Confirmed" }
+          - !UI.Event { name: "Closed" }
         elements:
           - !UI.Button { name: "yes", text: "Yes", emits: ["Confirmed"] }
 

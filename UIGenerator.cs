@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor.Callbacks;
+using BullyFramework;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,6 +18,43 @@ using System.Yaml.Serialization;
 
 namespace UIGenerator
 {
+    public static class PrefabsHelper
+    {
+        public const string GeneratorRoot = "Assets/Bully.Core/Dependencies/UIGenerator";
+        public const string PrefabsPath = "Assets/Bully.Core/Dependencies/UIGenerator/Prefabs";
+
+        static public Dictionary<string, GameObject> Prefabs ;
+
+        static public string GetPrefabPath(string name)
+        {
+            return Path.Combine(PrefabsPath, name + ".prefab");
+        }
+
+        static private GameObject LoadAsset(string name)
+        {
+            return AssetDatabase.LoadAssetAtPath<GameObject>(GetPrefabPath(name));
+        }
+
+        static public void LoadPrefabs()
+        {
+            Prefabs = new Dictionary<string, GameObject>();
+
+            string[] list = new string[] {
+                "Button", "Canvas"
+            };
+
+            for(int i = 0; i < list.Length; i++)
+            {
+                Prefabs.Add(list[i], LoadAsset( list[i] ));
+            }
+        }
+
+        static public void UnloadPrefabs()
+        {
+            Prefabs.Clear();
+        }
+    }
+
     public static class NamesFilter
     {
         public static string PrivateMember(string input, string type)
@@ -118,6 +156,8 @@ namespace UIGenerator
             };
 
             _nameGenerator = new NameGenerator(s_config);
+
+            PrefabsHelper.LoadPrefabs();
         }
         
         public UIGeneratorConfig Config {
@@ -214,7 +254,7 @@ namespace UIGenerator
             Template panel_template = GetTemplate("'panel'");
             foreach (var panel in screen.Panels)
             {
-                string className = panel.ClassName;
+                //string className = panel.ClassName;
                 string filename =  panel.FileName;
                 /*
                  *Debug.Log("Create panel script: " + filename);
@@ -256,7 +296,8 @@ namespace UIGenerator
                 Canvas = GameObject.FindWithTag("Canvas");
                 if (Canvas == null)
                 {
-                    Canvas = new GameObject("Canvas");
+                    Canvas = GameObject.Instantiate(PrefabsHelper.Prefabs["Canvas"]);
+                    Canvas.name = "Canvas";
                     Canvas.tag = "Canvas";
                 }
 
@@ -264,6 +305,7 @@ namespace UIGenerator
                 if (Panels == null)
                 {
                     Panels = new GameObject("Panels");
+                    Panels.AddComponent<RectTransform>();
                     Panels.transform.SetParent(Canvas.transform);
                     Panels.tag = "Panels";
                 }
@@ -279,26 +321,36 @@ namespace UIGenerator
                 GameObject sc = new GameObject(_nameGenerator.PrefabName(screen.ClassName));
 
                 GameObject screen_panels_group = new GameObject(screen.PanelsGroupName);
-                PanelsGroup panels_group_comp = screen_panels_group.AddComponent(typeof(PanelsGroup)) as PanelsGroup;
+                screen_panels_group.AddComponent<RectTransform>();
                 screen_panels_group.transform.SetParent(mainSceneStructure.Panels.transform);
 
-                Type screen_type = screen.ComponentType;
+                /*
+                 *Type screen_type = screen.ComponentType;
+                 *var screen_comp = sc.AddComponent(screen_type);
+                 */
 
-                var screen_comp = sc.AddComponent(screen_type);
                 sc.transform.SetParent(mainSceneStructure.ScreenManager.transform);
 
-
-                /*// Commented because BaseScreen finds PanelsGroup on Awake.
-                 *var panels_field = typeof(BaseScreen).GetField("Panels");
-                 *panels_field.SetValue(screen_comp, panels_group_comp);
-                 */
+/*
+ *
+ *                // Commented because BaseScreen finds PanelsGroup on Awake.
+ *                // PanelsGroup panels_group_comp = screen_panels_group.AddComponent(typeof(PanelsGroup)) as PanelsGroup;
+ *                var panels_field = typeof(BaseScreen).GetField("Panels");
+ *                panels_field.SetValue(screen_comp, panels_group_comp);
+ *                
+ */
 
                 foreach (var panel in screen.Panels)
                 {
                     GameObject pobj = new GameObject( _nameGenerator.PrefabName(panel.ClassName) );
+                    pobj.AddComponent<RectTransform>();
                     var panel_type = panel.ComponentType;
                     var panel_comp = pobj.AddComponent(panel_type);
                     pobj.transform.SetParent(screen_panels_group.transform);
+
+                    if (panel.Elements != null)
+                    foreach(var element in panel.Elements)
+                        element.Visit(panel, panel_comp as PanelBase);
 
                     /*
                      *string field_name = "_" + Screen.MakeFieldName(panel_type.Name);
@@ -360,6 +412,12 @@ namespace UIGenerator
     public class ColorSupportClass 
     {
 #region Panels Generator
+
+        [MenuItem("Tools/Check")]
+        static void Log()
+        {
+            Bully.Log("Fuck");
+        }
 
         [MenuItem("Tools/Generators/Generate UI scripts")]
         static void GenerateUIScripts()

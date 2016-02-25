@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using DotLiquid;
+using System.Reflection;
 
 namespace UIGenerator
 {
@@ -11,19 +12,50 @@ namespace UIGenerator
       SystemAction
     }
 
+    [Serializable]
+    [LiquidType("Declaration")]
     public class Event
     {
-      public string    Name;
-      public string    Params;
-      public EventType Type;
+      public string    Declaration {
+          get {
+              if (string.IsNullOrEmpty(parameters))
+              {
+                  return string.Format("public event Action {0};", name);
+              }
+              else
+              {
+                  return string.Format("public event Action<{0}> {1};", parameters, name );
+              }
+          }
+      }
+
+      public string    name;
+      public string    parameters;
     }
 
     [Serializable]
-    [LiquidType("name", "Buttons", "ClassName", "PublicEvents")]
+    [LiquidType("Name", "Events", "Buttons", "ClassName", "PublicEvents")]
     public class Panel
     {
         public string name;
-        public Element[] Elements;
+        public string Name { get { return name; } }
+
+        public Event[] events;
+        public Event[] Events {
+            get {
+                if (events == null)
+                    return new Event[0];
+                else
+                    return events;
+            }
+        }
+
+        public Element[] elements;
+        public Element[] Elements {
+            get {
+                return elements;
+            }
+        }
 
         public string ClassName {
             get {
@@ -34,45 +66,36 @@ namespace UIGenerator
         public string PublicEvents
         {
             get {
-                List<Event> events = new List<Event>();
-
-                for(int i = 0; i < Elements.Length; i++)
-                {
-                  Element el = Elements[i];
-                  if (el.EmitsEvent)
-                  {
 /*
- *                      string eventName = string.Format("UIGenerator.Normalize(el.Name);
- *                      events.Add( new Event {
- *                          Name = eventName,
- *                          Params = 
+ *                List<Event> events = new List<Event>();
  *
- *                      } );
- *
+ *                for(int i = 0; i < elements.Length; i++)
+ *                {
+ *                  Element el = elements[i];
+ *                  if (el.EmitsEvent)
+ *                  {
+ *                  }
+ *                }
  */
-                  }
-                }
                 return "// There is no public events.";
             }
         }
 
-        public string[] Buttons {
+        public Button[] Buttons {
             get {
-                List<string> list = new List<string>();
-                foreach(var element in Elements)
+                var list = new List<Button>();
+
+                if (elements != null)
+                foreach(var element in elements)
                 {
                     Button button = element as Button;
                     if (button == null)
                         continue;
 
-                    list.Add(button.name);
+                    list.Add(button);
                 }
 
-                var arr = list.ToArray();
-                if (arr == null)
-                    return new string[0];
-
-                return arr;
+                return list.ToArray();
             }
         }
 

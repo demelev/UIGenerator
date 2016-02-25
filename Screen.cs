@@ -49,13 +49,12 @@ namespace UIGenerator
 
     public string[] GetPanelsDeclaration()
     {
-      string text = "";
       string[] fields = new string[Panels.Length];
       int index = 0;
 
       foreach (var panel in Panels)
       {
-        string field_name_downcase = MakeFieldName(panel.ClassName);
+        string field_name_downcase = NamesFilter.PrivateMember(panel.ClassName, ""); 
         string field_decl = string.Format("{0} _{1};",
             panel.ClassName, field_name_downcase);
 

@@ -9,23 +9,17 @@ namespace {{config.ProjectNamespace}}
     public class {{panel.class_name}} : PanelBase
     {
     #region Public events
-        {% comment %}
-                    }{% for event in panel.PublicEvents %}
-                    }    {{event.ToString()}}
-                    }{% endfor %}
-                    {% endcomment %}
+        {% for event in panel.Events %}
+        {{event.Declaration}} {% endfor %}
+
     #endregion
 
 
     #region Private serializable variables
-
-        {% if panel.buttons -%}
-        {% for element in panel.buttons -%}
+        {% for button in panel.buttons -%}
 
         [SerializeField]
-        Button {{ element | private_member: "Button" }};
-        {% endfor -%}
-        {%endif-%}
+        Button {{ button.name | private_member: "Button" }}; {% endfor %}
 
     #endregion
 
@@ -36,14 +30,11 @@ namespace {{config.ProjectNamespace}}
 
 
 #region {{panel.class_name}} methods
+        {% for button in panel.buttons -%}
 
-        {% if panel.buttons -%}
-            {% for element in panel.buttons -%}
-        void {{ element | button_handler }}()
+        void {{ button.name | button_handler }}()
         {
-        }
-            {% endfor -%}
-        {%endif-%}
+        } {% endfor %}
 
 #endregion
 
@@ -51,13 +42,9 @@ namespace {{config.ProjectNamespace}}
 
         void Awake()
         {
-
-        {% if panel.buttons -%}
         {% for element in panel.buttons -%}
-        {{ element | private_member: "Button" }}.onClick.AddListener({{ element | button_handler }});
-        {% endfor -%}
-        {%endif-%}
-
+        {{ element.name | private_member: "Button" }}.onClick.AddListener({{ element.name | button_handler }});
+        {% endfor %}
         }
 
         void OnEnable()
