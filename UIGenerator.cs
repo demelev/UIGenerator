@@ -1,6 +1,14 @@
+//===----------------------------------------------------------------------===//
+//
+//  vim: ft=cs tw=80
+//
+//  Date:    02/25/2016 20:02:35
+//  Creator: Emeliov Dmitri <demelev1990@gmail.com>
+//
+//===----------------------------------------------------------------------===//
+
 using UnityEngine;
 using UnityEditor.Callbacks;
-using BullyFramework;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,64 +26,12 @@ using System.Yaml.Serialization;
 
 namespace UIGenerator
 {
-    public static class PrefabsHelper
-    {
-        public const string GeneratorRoot = "Assets/Bully.Core/Dependencies/UIGenerator";
-        public const string PrefabsPath = "Assets/Bully.Core/Dependencies/UIGenerator/Prefabs";
-
-        static public Dictionary<string, GameObject> Prefabs ;
-
-        static public string GetPrefabPath(string name)
-        {
-            return Path.Combine(PrefabsPath, name + ".prefab");
-        }
-
-        static private GameObject LoadAsset(string name)
-        {
-            return AssetDatabase.LoadAssetAtPath<GameObject>(GetPrefabPath(name));
-        }
-
-        static public void LoadPrefabs()
-        {
-            Prefabs = new Dictionary<string, GameObject>();
-
-            string[] list = new string[] {
-                "Button", "Canvas"
-            };
-
-            for(int i = 0; i < list.Length; i++)
-            {
-                Prefabs.Add(list[i], LoadAsset( list[i] ));
-            }
-        }
-
-        static public void UnloadPrefabs()
-        {
-            Prefabs.Clear();
-        }
-    }
-
-    public static class NamesFilter
-    {
-        public static string PrivateMember(string input, string type)
-        {
-            char first = char.ToLower(input[0]);
-            return string.Format("_{0}{1}{2}", first, input.Substring(1), type);
-        }
-
-        public static string ButtonHandler(string input)
-        {
-            char first = char.ToUpper(input[0]);
-            return string.Format("{0}{1}ButtonClicked", first, input.Substring(1));
-        }
-    }
-
-    public enum FileType
+    internal enum FileType
     {
         YAML
     }
 
-    public class UIGenerator
+    internal class UIGenerator
     {
         static public bool ScriptsWasCreated
         {
@@ -88,8 +44,6 @@ namespace UIGenerator
             }
         }
 
-        static public UIDesciption ActiveDescription;
-
 #region Private members
         private IFileSystem _fileSystem;
         private Context _context;
@@ -100,7 +54,6 @@ namespace UIGenerator
         private Template _lastTemplate;
 
         static internal UIGeneratorConfig s_config;
-        private NameGenerator _nameGenerator;
 #endregion
 
 
@@ -149,13 +102,11 @@ namespace UIGenerator
             _fileSystem = new LocalFileSystem(dir);
             _context = new Context();
             Template.FileSystem = _fileSystem;
-            Template.RegisterFilter(typeof(NamesFilter));
+            Template.RegisterFilter(typeof(NamesFormatter));
 
             s_config = new UIGeneratorConfig() {
                 PrefabWithPrefix = true
             };
-
-            _nameGenerator = new NameGenerator(s_config);
 
             PrefabsHelper.LoadPrefabs();
         }
@@ -165,7 +116,6 @@ namespace UIGenerator
                 if (s_config != value)
                 {
                     s_config = value;
-                    _nameGenerator.config = value;
                 }
             }
         }
@@ -234,8 +184,7 @@ namespace UIGenerator
                 string result = screen_template.Render(
                     Hash.FromAnonymousObject( new  {
                         screen = screen,
-                        config = s_config,
-                        namer = _nameGenerator
+                        config = s_config
                     })
                 );
 
@@ -265,8 +214,7 @@ namespace UIGenerator
                 string result = panel_template.Render(
                     Hash.FromAnonymousObject( new {
                         panel = panel,
-                        config = s_config,
-                        namer = _nameGenerator
+                        config = s_config
                     })
                 );
 
@@ -276,49 +224,13 @@ namespace UIGenerator
             }
         }
 
-        class MainSceneStructure
-        {
-            public ScreenManager ScreenManager;
-            public GameObject Canvas;
-            public GameObject Panels;
-            public GameObject Backgrounds;
-            public GameObject Managers;
-
-            public MainSceneStructure()
-            {
-                ScreenManager = GameObject.FindObjectOfType<ScreenManager>();
-                if (ScreenManager == null)
-                {
-                    var go = new GameObject("ScreenManager");
-                    ScreenManager = go.AddComponent(typeof(ScreenManager)) as ScreenManager;
-                }
-
-                Canvas = GameObject.FindWithTag("Canvas");
-                if (Canvas == null)
-                {
-                    Canvas = GameObject.Instantiate(PrefabsHelper.Prefabs["Canvas"]);
-                    Canvas.name = "Canvas";
-                    Canvas.tag = "Canvas";
-                }
-
-                Panels = GameObject.FindWithTag("Panels");
-                if (Panels == null)
-                {
-                    Panels = new GameObject("Panels");
-                    Panels.AddComponent<RectTransform>();
-                    Panels.transform.SetParent(Canvas.transform);
-                    Panels.tag = "Panels";
-                }
-            }
-        }
-
         private void CreateUnityObjects(UIDesciption uiDesc)
         {
             var mainSceneStructure = new MainSceneStructure();
 
             foreach (var screen in uiDesc.Screens)
             {
-                GameObject sc = new GameObject(_nameGenerator.PrefabName(screen.ClassName));
+                GameObject sc = new GameObject(NamesFormatter.PrefabName(screen.ClassName));
 
                 GameObject screen_panels_group = new GameObject(screen.PanelsGroupName);
                 screen_panels_group.AddComponent<RectTransform>();
@@ -342,7 +254,7 @@ namespace UIGenerator
 
                 foreach (var panel in screen.Panels)
                 {
-                    GameObject pobj = new GameObject( _nameGenerator.PrefabName(panel.ClassName) );
+                    GameObject pobj = new GameObject( NamesFormatter.PrefabName(panel.ClassName) );
                     pobj.AddComponent<RectTransform>();
                     var panel_type = panel.ComponentType;
                     var panel_comp = pobj.AddComponent(panel_type);
@@ -376,32 +288,6 @@ namespace UIGenerator
 #endregion
     }
 
-    public class NameGenerator
-    {
-        public UIGeneratorConfig config;
-
-        public NameGenerator(UIGeneratorConfig config)
-        {
-            this.config = config;
-        }
-
-        public string PrivateField(string name)
-        {
-            return "_" + Char.ToUpper(name[0]) + name.Substring(1);
-        }
-
-        public string PrefabName(string name)
-        {
-            if (config.PrefabWithPrefix)
-            {
-                return "P_" + name;
-            }
-            else
-                return name;
-        }
-    }
-
-
     [Serializable]
     public class UIDesciption
     {
@@ -412,13 +298,6 @@ namespace UIGenerator
     public class ColorSupportClass 
     {
 #region Panels Generator
-
-        [MenuItem("Tools/Check")]
-        static void Log()
-        {
-            Bully.Log("Fuck");
-        }
-
         [MenuItem("Tools/Generators/Generate UI scripts")]
         static void GenerateUIScripts()
         {

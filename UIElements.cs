@@ -20,7 +20,7 @@ namespace UIGenerator
             }
         }
 
-        public virtual void Visit(Panel panelDescr, PanelBase panelUI) 
+        internal virtual void Visit(Panel panelDescr, PanelBase panelUI) 
         {
         }
 
@@ -54,7 +54,7 @@ namespace UIGenerator
 
         public override string Declaration() 
         {
-            return "Button " + NamesFilter.PrivateMember(name, "Button") + ";";
+            return "Button " + NamesFormatter.PrivateMember(name, "Button") + ";";
         }
 
         static UnityButton CreateButton( string name )
@@ -64,17 +64,18 @@ namespace UIGenerator
             return button.GetComponent<UnityButton>();
         }
 
-        override public void Visit(Panel panelDescr, PanelBase panelUI) 
+        override internal void Visit(Panel panelDescr, PanelBase panelUI) 
         {
             var fields = panelDescr.ComponentType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-            string button_name = NamesFilter.PrivateMember(this.Name, "Button");
+            string button_name = NamesFormatter.ObjectName(this.Name, "Button");
 
-            var button = CreateButton(button_name);
+            var button = PrefabsHelper.CreateObject("Button", button_name);
             button.transform.SetParent(panelUI.transform);
 
+            string field_name = NamesFormatter.PrivateMember(this.Name, "Button");
             foreach(var field in fields)
             {
-                if (field.Name == button_name)
+                if (field.Name == field_name)
                 {
                     field.SetValue(panelUI, button);
                 }
@@ -83,17 +84,47 @@ namespace UIGenerator
     }
 
     [Serializable]
-    [LiquidType("name", "text", "type")]
+    [LiquidType("Name", "text")]
     public class Text : Element
     {
         public string text;
+
+        override internal void Visit(Panel panelDescr, PanelBase panelUI) 
+        {
+            string text_name = NamesFormatter.ObjectName(this.Name, "Label");
+            var text_object = PrefabsHelper.CreateObject("Text", text_name);
+            var c_text = text_object.GetComponent<UnityEngine.UI.Text>();
+            c_text.text = text;
+            text_object.transform.SetParent(panelUI.transform);
+        }
     }
 
     [Serializable]
-    [LiquidType("horizontal", "type")]
+    [LiquidType("horizontal")]
     public class List : Element
     {
+        //TODO: User horizontal and create item prefab.
         public bool horizontal;
         public string list_item_name;
+
+        override internal void Visit(Panel panelDescr, PanelBase panelUI) 
+        {
+            string list_name = NamesFormatter.ObjectName(this.Name, "List");
+
+            var list = PrefabsHelper.CreateObject("Scroll View", list_name);
+            list.transform.SetParent(panelUI.transform);
+
+            /*
+             *var fields = panelDescr.ComponentType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+             *string field_name = NamesFormatter.PrivateMember(this.Name, "List");
+             *foreach(var field in fields)
+             *{
+             *    if (field.Name == field_name)
+             *    {
+             *        field.SetValue(panelUI, list);
+             *    }
+             *}
+             */
+        }
     }
 }

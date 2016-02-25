@@ -54,7 +54,7 @@ namespace UIGenerator
 
       foreach (var panel in Panels)
       {
-        string field_name_downcase = NamesFilter.PrivateMember(panel.ClassName, ""); 
+        string field_name_downcase = NamesFormatter.PrivateMember(panel.ClassName, ""); 
         string field_decl = string.Format("{0} _{1};",
             panel.ClassName, field_name_downcase);
 
