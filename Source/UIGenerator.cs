@@ -236,10 +236,8 @@ namespace UIGenerator
                 screen_panels_group.AddComponent<RectTransform>();
                 screen_panels_group.transform.SetParent(mainSceneStructure.Panels.transform);
 
-                /*
-                 *Type screen_type = screen.ComponentType;
-                 *var screen_comp = sc.AddComponent(screen_type);
-                 */
+                Type screen_type = screen.ComponentType;
+                sc.AddComponent(screen_type);
 
                 sc.transform.SetParent(mainSceneStructure.ScreenManager.transform);
 

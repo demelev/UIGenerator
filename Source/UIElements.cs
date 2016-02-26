@@ -72,12 +72,14 @@ namespace UIGenerator
             var button = PrefabsHelper.CreateObject("Button", button_name);
             button.transform.SetParent(panelUI.transform);
 
+            UnityButton ui_button = button.GetComponent<UnityButton>();
+
             string field_name = NamesFormatter.PrivateMember(this.Name, "Button");
             foreach(var field in fields)
             {
                 if (field.Name == field_name)
                 {
-                    field.SetValue(panelUI, button);
+                    field.SetValue(panelUI, ui_button);
                 }
             }
         }
