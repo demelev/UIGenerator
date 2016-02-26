@@ -29,7 +29,6 @@ Screens:
         elements:
           - !UI.Button { name: "yes", text: "Yes", emits: ["Confirmed"] }
 
-
   - !UI.Screen
     Name: "CharacterIntro"
     Panels:
