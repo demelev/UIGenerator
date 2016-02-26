@@ -4,6 +4,7 @@ using System;
 using DotLiquid;
 using System.Reflection;
 using UnityButton = UnityEngine.UI.Button;
+using BullyInternal;
 
 namespace UIGenerator
 {
@@ -115,6 +116,7 @@ namespace UIGenerator
 
             var list = PrefabsHelper.CreateObject("Scroll View", list_name);
             list.transform.SetParent(panelUI.transform);
+            list.transform.ResetTransform();
 
             /*
              *var fields = panelDescr.ComponentType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);

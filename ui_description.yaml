@@ -1,8 +1,8 @@
 %YAML 1.2
 ---
 !UI.UIGeneratorConfig
-ProjectName: "Color"
-ProjectNamespace: "DWColor"
+ProjectName: "FUCK"
+ProjectNamespace: "FUCKNAMESPACE"
 PrefabWithPrefix: true
 ...
 
@@ -26,11 +26,21 @@ Screens:
         events:
           - !UI.Event { name: "Confirmed" }
           - !UI.Event { name: "Closed" }
+          - !UI.Event { name: "RiseTrigger", parameters: "BaseScreen, string" }
         elements:
           - !UI.Button { name: "yes", text: "Yes", emits: ["Confirmed"] }
+          - !UI.Button { name: "no", text: "I don't want.", emits: ["Canceled"] }
+          - !UI.Button { name: "no1", text: "I don't want.", emits: ["Canceled"] }
+          - !UI.Button { name: "no2", text: "I don't want.", emits: ["Canceled"] }
+          - !UI.Button { name: "no3", text: "I don't want.", emits: ["Canceled"] }
 
   - !UI.Screen
     Name: "CharacterIntro"
+    Panels:
+      - !UI.Panel {name: "ColorRoomSelectionConfirm"}
+
+  - !UI.Screen
+    Name: "CharacterIntro1"
     Panels:
       - !UI.Panel {name: "ColorRoomSelectionConfirm"}
 

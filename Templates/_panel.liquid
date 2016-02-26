@@ -43,8 +43,7 @@ namespace {{config.ProjectNamespace}}
         void Awake()
         {
         {% for element in panel.buttons -%}
-        {{ element.name | private_member: "Button" }}.onClick.AddListener({{ element.name | button_handler }});
-        {% endfor %}
+        {{ element.name | private_member: "Button" }}.onClick.AddListener({{ element.name | button_handler }}); {% endfor %}
         }
 
         void OnEnable()
