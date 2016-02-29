@@ -9,12 +9,13 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UISystem;
 
 namespace UIGenerator
 {
     internal class MainSceneStructure
     {
-        public ScreenManager ScreenManager;
+        public UISystem.ScreenManager ScreenManager;
         public GameObject Canvas;
         public GameObject Panels;
         public GameObject Backgrounds;
